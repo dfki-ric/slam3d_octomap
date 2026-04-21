@@ -25,6 +25,5 @@ install(
 		slam3d_octomap-dependencies.cmake
 		${PROJECT_BINARY_DIR}/slam3d_octomap-config-version.cmake
 	DESTINATION
-		lib/cmake/slam3d
+		lib/cmake/slam3d_octomap
 )
-
