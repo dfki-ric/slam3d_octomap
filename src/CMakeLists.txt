@@ -5,7 +5,7 @@ add_library(slam3d_octomap SHARED
 target_include_directories(slam3d_octomap
 	PUBLIC
 		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-		$<INSTALL_INTERFACE:include>
+		$<INSTALL_INTERFACE:include/slam3d_octomap>
 )
 
 target_link_libraries(slam3d_octomap
@@ -16,7 +16,7 @@ target_link_libraries(slam3d_octomap
 
 # Install header files
 install(DIRECTORY ./
-	DESTINATION include/slam3d_octomap
+	DESTINATION include/slam3d_octomap/slam3d/octomap
 	FILES_MATCHING PATTERN "*.hpp"
 )
 
@@ -32,8 +32,4 @@ configure_file(slam3d_octomap.pc.in slam3d_octomap.pc @ONLY)
 install(
 	FILES ${PROJECT_BINARY_DIR}/src/slam3d_octomap.pc
 	DESTINATION lib/pkgconfig
-)
-
-set_target_properties(octomap PROPERTIES
-	OUTPUT_NAME slam3d_octomap
 )

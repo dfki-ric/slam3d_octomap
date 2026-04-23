@@ -33,7 +33,13 @@ void OctoMap::addMeasurement(PointCloudMeasurement::Ptr scan, const Transform& p
 void OctoMap::sendMap()
 {
 	mOcTree.updateInnerOccupancy();
+	mOcTree.prune();
 	mOcTree.writeBinaryConst("slam3d_octomap.bt");
+}
+
+void OctoMap::clear()
+{
+	mOcTree.clear();
 }
 
 bool OctoMap::remove_dynamic_objects()

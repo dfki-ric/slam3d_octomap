@@ -14,11 +14,14 @@ namespace slam3d
 		
 		void addMeasurement(PointCloudMeasurement::Ptr scan, const Transform& pose);
 		void sendMap();
+		void clear();
 		bool remove_dynamic_objects();
 
 		unsigned removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Transform &cloudOrigin = Transform::Identity());
 
 		bool isOccupied(const Eigen::Vector3d &p_tf);
+
+		const octomap::OcTree& getOcTree() const { return mOcTree; }
 
 	protected:
 		octomap::OcTree mOcTree;
