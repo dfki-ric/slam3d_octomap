@@ -16,7 +16,7 @@ target_link_libraries(slam3d_octomap
 
 # Install header files
 install(DIRECTORY ./
-	DESTINATION include/slam3d/slam3d_octomap
+	DESTINATION include/slam3d_octomap
 	FILES_MATCHING PATTERN "*.hpp"
 )
 
