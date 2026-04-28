@@ -1,6 +1,7 @@
 #include "OctoMap.hpp"
 
 #include <pcl/common/transforms.h>
+#include <pcl/filters/extract_indices.h>
 
 using namespace slam3d;
 
@@ -54,26 +55,50 @@ bool OctoMap::remove_dynamic_objects()
 		}
 		
 		// Check each point, if it is in free OctoMap voxel
-		PointCloud::Ptr cloud = m->getPointCloud();
-		for(PointCloud::iterator p = cloud->begin(); p != cloud->end();)
-		{
-			Eigen::Vector3d p_tf;
-			p_tf[0] = p->x;
-			p_tf[1] = p->y;
-			p_tf[2] = p->z;
-			p_tf = v->correctedPose * m->getSensorPose() * p_tf;
-			octomap::OcTreeNode* node = mOcTree.search(p_tf[0], p_tf[1], p_tf[2]);
-			if(node && !mOcTree.isNodeOccupied(node))
-			{
-				deleted++;
-				p = cloud->erase(p);
-			}else
-			{
-				p++;
-			}
-		}
+		deleted += removeDynamicObjectsFromCloud(m->getPointCloud(), v->correctedPose * m->getSensorPose());
+
 	}
 	int duration = mClock->now().tv_sec - start.tv_sec;
 	mLogger->message(INFO, (boost::format("Removed %1% dynamic points in %2% seconds.") % deleted % duration).str());
 	return true;
+}
+
+unsigned OctoMap::removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Transform &cloudOrigin)
+{
+	unsigned deleted = 0;
+
+	pcl::PointIndices::Ptr toBeErased (new pcl::PointIndices);
+	pcl::ExtractIndices<pcl::PointXYZ> extract;
+
+	// for(PointCloud::iterator p = cloud->begin(); p != cloud->end();)
+	for(size_t i = 0; i<cloud->size(); ++i)
+	{
+		Eigen::Vector3d p_tf;
+		p_tf[0] = (*cloud)[i].x;
+		p_tf[1] = (*cloud)[i].y;
+		p_tf[2] = (*cloud)[i].z;
+		p_tf = cloudOrigin * p_tf;
+
+		if( isOccupied(p_tf))
+		{
+			deleted++;
+			toBeErased->indices.push_back(i);
+		}
+	}
+	extract.setInputCloud(cloud);
+	extract.setIndices(toBeErased);
+	extract.setNegative(true);
+	extract.filter(*cloud);
+
+	return deleted;
+}
+
+bool OctoMap::isOccupied(const Eigen::Vector3d &p_tf) {
+	octomap::OcTreeNode* node = mOcTree.search(p_tf[0], p_tf[1], p_tf[2]);
+	if (!node) {
+		 // if node is not found, report occupied
+		 // this is used as a filter, it should not report "free" with no information in the tree
+		return true; 
+	}
+	return mOcTree.isNodeOccupied(node);
 }

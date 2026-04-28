@@ -8,7 +8,7 @@ add_subdirectory(src)
 
 # Export the library interface
 install(EXPORT slam3d_octomap-targets
-	NAMESPACE slam3d::
+	NAMESPACE slam3d_octomap::
 	DESTINATION lib/cmake/slam3d_octomap
 )
 
