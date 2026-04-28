@@ -16,6 +16,10 @@ namespace slam3d
 		void sendMap();
 		bool remove_dynamic_objects();
 
+		unsigned removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Transform &cloudOrigin = Transform::Identity());
+
+		bool isOccupied(const Eigen::Vector3d &p_tf);
+
 	protected:
 		octomap::OcTree mOcTree;
 		OctoMapConfiguration mConfig;
