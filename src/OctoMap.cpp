@@ -85,7 +85,7 @@ unsigned OctoMap::removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Tra
 		p_tf[2] = (*cloud)[i].z;
 		p_tf = cloudOrigin * p_tf;
 
-		if( isOccupied(p_tf))
+		if( !isOccupied(p_tf))
 		{
 			deleted++;
 			toBeErased->indices.push_back(i);
