@@ -42,7 +42,7 @@ void OctoMap::clear()
 	mOcTree.clear();
 }
 
-bool OctoMap::remove_dynamic_objects()
+bool OctoMap::remove_dynamic_objects(PointCloud::Ptr removed)
 {
 	mLogger->message(INFO, "Requested dynamic object removal.");
 	timeval start = mClock->now();
@@ -61,7 +61,7 @@ bool OctoMap::remove_dynamic_objects()
 		}
 		
 		// Check each point, if it is in free OctoMap voxel
-		deleted += removeDynamicObjectsFromCloud(m->getPointCloud(), v->correctedPose * m->getSensorPose());
+		deleted += removeDynamicObjectsFromCloud(m->getPointCloud(), v->correctedPose * m->getSensorPose(), removed);
 
 	}
 	int duration = mClock->now().tv_sec - start.tv_sec;
@@ -69,7 +69,7 @@ bool OctoMap::remove_dynamic_objects()
 	return true;
 }
 
-unsigned OctoMap::removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Transform &cloudOrigin)
+unsigned OctoMap::removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Transform &cloudOrigin, PointCloud::Ptr removed)
 {
 	unsigned deleted = 0;
 
@@ -89,6 +89,14 @@ unsigned OctoMap::removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Tra
 		{
 			deleted++;
 			toBeErased->indices.push_back(i);
+			if(removed)
+			{
+				slam3d::PointType p;
+				p.x = p_tf[0];
+				p.y = p_tf[1];
+				p.z = p_tf[2];
+				removed->push_back(p);
+			}
 		}
 	}
 	extract.setInputCloud(cloud);

@@ -15,9 +15,12 @@ namespace slam3d
 		void addMeasurement(PointCloudMeasurement::Ptr scan, const Transform& pose);
 		void sendMap();
 		void clear();
-		bool remove_dynamic_objects();
+		bool remove_dynamic_objects(PointCloud::Ptr removed = {});
 
-		unsigned removeDynamicObjectsFromCloud(PointCloud::Ptr cloud, const Transform &cloudOrigin = Transform::Identity());
+		unsigned removeDynamicObjectsFromCloud(
+			PointCloud::Ptr cloud,
+			const Transform &cloudOrigin = Transform::Identity(),
+			PointCloud::Ptr removed = {});
 
 		bool isOccupied(const Eigen::Vector3d &p_tf);
 
