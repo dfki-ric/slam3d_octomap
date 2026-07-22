@@ -4,18 +4,19 @@
 
 #include <octomap/OcTree.h>
 #include <slam3d/sensor/pcl/PointCloudSensor.hpp>
+#include <slam3d/core/MeasurementStorage.hpp>
 
 namespace slam3d
 {
 	class OctoMap
 	{
 	public:
-		OctoMap(const OctoMapConfiguration &conf, Clock* c, Logger* l, Graph* g);
+		OctoMap(const OctoMapConfiguration &conf, Clock* c, Logger* l, MeasurementStorage* s);
 		
-		void addMeasurement(PointCloudMeasurement::Ptr scan, const Transform& pose);
+		void addMeasurement(PointCloudMeasurement::Ptr scan, const MetaData& meta, const Transform& pose);
 		void sendMap();
 		void clear();
-		bool remove_dynamic_objects(PointCloud::Ptr removed = {});
+		bool remove_dynamic_objects(const VertexObjectList& vertices, PointCloud::Ptr removed = {});
 
 		unsigned removeDynamicObjectsFromCloud(
 			PointCloud::Ptr cloud,
@@ -32,6 +33,6 @@ namespace slam3d
 
 		Clock* mClock;
 		Logger* mLogger;
-		Graph* mGraph;
+		MeasurementStorage* mStorage;
 	};
 }

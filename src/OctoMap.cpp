@@ -3,10 +3,12 @@
 #include <pcl/common/transforms.h>
 #include <pcl/filters/extract_indices.h>
 
+#include <boost/format.hpp>
+
 using namespace slam3d;
 
-OctoMap::OctoMap(const OctoMapConfiguration &conf, Clock* c, Logger* l, Graph* g)
-: mOcTree(conf.resolution), mConfig(conf), mClock(c), mLogger(l), mGraph(g)
+OctoMap::OctoMap(const OctoMapConfiguration &conf, Clock* c, Logger* l, MeasurementStorage* s)
+: mOcTree(conf.resolution), mConfig(conf), mClock(c), mLogger(l), mStorage(s)
 {
 	mOcTree.setOccupancyThres(conf.occupancyThres);
 	mOcTree.setProbHit(conf.probHit);
@@ -15,10 +17,10 @@ OctoMap::OctoMap(const OctoMapConfiguration &conf, Clock* c, Logger* l, Graph* g
 	mOcTree.setClampingThresMax(conf.clampingThresMax);
 }
 
-void OctoMap::addMeasurement(PointCloudMeasurement::Ptr scan, const Transform& pose)
+void OctoMap::addMeasurement(PointCloudMeasurement::Ptr scan, const MetaData& meta, const Transform& pose)
 {
 	PointCloud::Ptr tempCloud(new PointCloud);
-	Transform sensor = pose * scan->getSensorPose();
+	Transform sensor = pose * meta.sensorPose;
 	pcl::transformPointCloud(*(scan->getPointCloud()), *tempCloud, sensor.matrix());
 
 	octomap::Pointcloud octoCloud;
@@ -42,18 +44,16 @@ void OctoMap::clear()
 	mOcTree.clear();
 }
 
-bool OctoMap::remove_dynamic_objects(PointCloud::Ptr removed)
+bool OctoMap::remove_dynamic_objects(const VertexObjectList& vertices, PointCloud::Ptr removed)
 {
 	mLogger->message(INFO, "Requested dynamic object removal.");
 	timeval start = mClock->now();
-	VertexObjectList vertices = mGraph->getVerticesByType("slam3d::PointCloudMeasurement");
 	unsigned deleted = 0;
 	
-	for(VertexObjectList::iterator v = vertices.begin(); v != vertices.end(); ++v)
+	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
 	{
 		// Cast to PointCloudMeasurement
-		PointCloudMeasurement::Ptr m =
-			boost::dynamic_pointer_cast<PointCloudMeasurement>(mGraph->getMeasurement(v->index));
+		PointCloudMeasurement::Ptr m = mStorage->get<PointCloudMeasurement>(v->measurement.uniqueId);
 		if(!m)
 		{
 			mLogger->message(WARNING, "Vertex given to remove_dynamic_objects is not a Pointcloud!");
@@ -61,7 +61,10 @@ bool OctoMap::remove_dynamic_objects(PointCloud::Ptr removed)
 		}
 		
 		// Check each point, if it is in free OctoMap voxel
-		deleted += removeDynamicObjectsFromCloud(m->getPointCloud(), v->correctedPose * m->getSensorPose(), removed);
+		deleted += removeDynamicObjectsFromCloud(
+			m->getPointCloud(),
+			v->correctedPose * v->measurement.sensorPose,
+			removed);
 
 	}
 	int duration = mClock->now().tv_sec - start.tv_sec;
